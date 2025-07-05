@@ -149,4 +149,14 @@ class DatabaseUtils:
                 (session_id, user_message, ai_response)
             )
             conn.commit()
-            return cursor.lastrowid or 0 
+            return cursor.lastrowid or 0
+    
+    def save_extracted_meta(self, session_id: str, meta: dict):
+        """Save meta fields like net_salary, gross_salary, reimbursement to user_inputs"""
+        with self.db_manager.get_connection() as conn:
+            for key, value in meta.items():
+                conn.execute(
+                    "INSERT INTO user_inputs (session_id, input_type, field_name, field_value) VALUES (?, ?, ?, ?)",
+                    (session_id, 'meta', key, str(value))
+                )
+            conn.commit() 

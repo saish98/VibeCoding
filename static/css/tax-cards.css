@@ -1,0 +1,90 @@
+/* Salary Info Cards */
+.tax-card-primary {
+    background: linear-gradient(135deg, #2196f3 0%, #21cbf3 100%);
+    color: #fff;
+    border: none;
+}
+.tax-card-info {
+    background: linear-gradient(135deg, #00bcd4 0%, #8ec5fc 100%);
+    color: #fff;
+    border: none;
+}
+.tax-card-success {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: #fff;
+    border: none;
+}
+.tax-card-warning {
+    background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    color: #fff;
+    border: none;
+}
+.tax-card-shadow {
+    box-shadow: 0 8px 32px 0 rgba(34, 34, 34, 0.18), 0 1.5px 6px 0 rgba(0,0,0,0.10);
+    border-radius: 1rem;
+}
+
+/* Tax Regime Cards */
+.tax-regime-old {
+    background: linear-gradient(135deg, #757f9a 0%, #d7dde8 100%);
+    color: #222;
+    border: none;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+.tax-regime-new {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: #fff;
+    border: none;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+.tax-regime-recommended {
+    border: none !important;
+}
+
+.tax-badge-recommended {
+    background: #fff;
+    color: #11998e;
+    font-weight: bold;
+    border-radius: 12px;
+    padding: 0.25em 0.75em;
+    font-size: 1em;
+    margin-left: 0.5em;
+}
+
+.display-6 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .display-6 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Black to White Gradient Title */
+.tax-title-gradient {
+    background: linear-gradient(90deg, #000 0%, #fff 100%);
+    color: #fff;
+    font-weight: bold;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 1rem 1.5rem;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+}
+
+/* Black to White Gradient Card Body */
+.tax-bg-gradient {
+    background: linear-gradient(90deg, #000 0%, #fff 100%);
+    color: #fff;
+}
+
+body, .main-bg {
+    background: #f6f7f9 !important; /* Warmer off-white */
+} 

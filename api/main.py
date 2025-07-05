@@ -132,6 +132,13 @@ async def upload_pdf(
             db_utils.save_user_input(session_id, 'earnings', field, str(value))
         for field, value in extracted.get('deductions', {}).items():
             db_utils.save_user_input(session_id, 'deductions', field, str(value))
+        # Save meta fields
+        meta_fields = {}
+        for key in ['net_salary', 'gross_salary', 'reimbursement']:
+            if extracted.get(key) is not None:
+                meta_fields[key] = extracted[key]
+        if meta_fields:
+            db_utils.save_extracted_meta(session_id, meta_fields)
         # --- Tax Calculation ---
         gross = extracted.get('gross_salary') or 0
         deductions_total = sum(extracted.get('deductions', {}).values())
@@ -205,13 +212,39 @@ async def display_pdf(request: Request, session_id: str):
             extracted['earnings'][row['field_name']] = row['field_value']
         elif row['input_type'] == 'deductions':
             extracted['deductions'][row['field_name']] = row['field_value']
+    # Add meta fields if present in user_inputs
+    for row in user_inputs:
+        if row['input_type'] == 'meta':
+            extracted[row['field_name']] = float(row['field_value'])
+    # Fallback: get from tax_calculations if not found
+    if 'gross_salary' not in extracted and tax:
+        extracted['gross_salary'] = tax.get('gross_income')
+    if 'net_salary' not in extracted and tax:
+        extracted['net_salary'] = tax.get('net_salary')
+    if 'reimbursement' not in extracted and tax:
+        extracted['reimbursement'] = tax.get('reimbursement')
     tax = tax_calculations[0] if tax_calculations else {}
+    # Determine best regime
+    best_regime = None
+    if tax:
+        try:
+            old = float(tax.get('tax_old_regime', 0))
+            new = float(tax.get('tax_new_regime', 0))
+            if old < new:
+                best_regime = 'Old Regime'
+            elif new < old:
+                best_regime = 'New Regime'
+            else:
+                best_regime = 'Both are equal'
+        except Exception:
+            best_regime = None
     return templates.TemplateResponse("display.html", {
         "request": request,
         "session_id": session_id,
         "document": document_data,
         "extracted": extracted,
-        "tax": tax
+        "tax": tax,
+        "best_regime": best_regime
     })
 
 @app.delete("/delete-file/{document_id}")
