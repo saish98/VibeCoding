@@ -129,14 +129,14 @@ class DatabaseUtils:
             return cursor.lastrowid or 0
     
     def save_tax_calculation(self, session_id: str, gross_income: float, tax_old_regime: float, 
-                           tax_new_regime: float, total_deductions: float, net_tax: float) -> int:
+                           tax_new_regime: float, total_deductions: float, net_tax: float, employee_name: str = "") -> int:
         """Save tax calculation results to database"""
         with self.db_manager.get_connection() as conn:
             cursor = conn.execute(
                 """INSERT INTO tax_calculations 
-                   (session_id, gross_income, tax_old_regime, tax_new_regime, total_deductions, net_tax) 
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (session_id, gross_income, tax_old_regime, tax_new_regime, total_deductions, net_tax)
+                   (session_id, gross_income, tax_old_regime, tax_new_regime, total_deductions, net_tax, employee_name) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (session_id, gross_income, tax_old_regime, tax_new_regime, total_deductions, net_tax, employee_name)
             )
             conn.commit()
             return cursor.lastrowid or 0

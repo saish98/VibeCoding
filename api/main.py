@@ -147,13 +147,15 @@ async def upload_pdf(
         # New Regime: flat 15% on gross
         tax_new = gross * 0.15
         net_tax = min(tax_old, tax_new)
+        employee_name = extracted.get('employee', {}).get('name', '')
         calc_id = db_utils.save_tax_calculation(
             session_id=session_id,
             gross_income=gross,
             tax_old_regime=tax_old,
             tax_new_regime=tax_new,
             total_deductions=deductions_total,
-            net_tax=net_tax
+            net_tax=net_tax,
+            employee_name=employee_name
         )
         return JSONResponse({
             "success": True,
@@ -203,6 +205,7 @@ async def display_pdf(request: Request, session_id: str):
     latest_doc = documents[0]
     # Convert datetime objects to strings for JSON serialization
     document_data = convert_datetime_to_string(latest_doc)
+    tax = tax_calculations[0] if tax_calculations else {}
     # Organize extracted data for display
     extracted = {'employee': {}, 'earnings': {}, 'deductions': {}}
     for row in user_inputs:
@@ -215,15 +218,17 @@ async def display_pdf(request: Request, session_id: str):
     # Add meta fields if present in user_inputs
     for row in user_inputs:
         if row['input_type'] == 'meta':
-            extracted[row['field_name']] = float(row['field_value'])
+            try:
+                extracted[row['field_name']] = float(row['field_value'])
+            except Exception:
+                extracted[row['field_name']] = row['field_value']
     # Fallback: get from tax_calculations if not found
-    if 'gross_salary' not in extracted and tax:
-        extracted['gross_salary'] = tax.get('gross_income')
-    if 'net_salary' not in extracted and tax:
-        extracted['net_salary'] = tax.get('net_salary')
-    if 'reimbursement' not in extracted and tax:
-        extracted['reimbursement'] = tax.get('reimbursement')
-    tax = tax_calculations[0] if tax_calculations else {}
+    if 'gross_salary' not in extracted and tax and not isinstance(extracted.get('gross_salary'), dict):
+        extracted['gross_salary'] = float(tax.get('gross_income', 0.0) or 0.0)
+    if 'net_salary' not in extracted and tax and not isinstance(extracted.get('net_salary'), dict):
+        extracted['net_salary'] = float(tax.get('net_tax', 0.0) or 0.0)
+    if 'reimbursement' not in extracted and tax and not isinstance(extracted.get('reimbursement'), dict):
+        extracted['reimbursement'] = float(tax.get('reimbursement', 0.0) or 0.0)
     # Determine best regime
     best_regime = None
     if tax:

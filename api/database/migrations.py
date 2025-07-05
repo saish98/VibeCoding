@@ -94,9 +94,35 @@ class DatabaseMigration:
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
                 )"""
+            ]),
+            ("002_add_employee_name_to_tax_calculations", [
+                "ALTER TABLE tax_calculations ADD COLUMN employee_name TEXT"
             ])
         ]
         
         for migration_name, sql_commands in migrations:
             if migration_name not in applied:
-                self.apply_migration(migration_name, sql_commands) 
+                self.apply_migration(migration_name, sql_commands)
+
+    def migration_add_employee_name_to_tax_calculations(self, conn):
+        conn.execute("""
+            ALTER TABLE tax_calculations ADD COLUMN employee_name TEXT
+        """)
+
+    def apply_migration(self, migration_name: str, sql_commands: List[str]):
+        """Apply a migration"""
+        with sqlite3.connect(self.db_path) as conn:
+            try:
+                for sql in sql_commands:
+                    conn.execute(sql)
+                
+                conn.execute(
+                    f"INSERT INTO {self.migrations_table} (migration_name) VALUES (?)",
+                    (migration_name,)
+                )
+                conn.commit()
+                print(f"✓ Applied migration: {migration_name}")
+            except Exception as e:
+                conn.rollback()
+                print(f"✗ Failed to apply migration {migration_name}: {e}")
+                raise 

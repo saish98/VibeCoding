@@ -108,7 +108,8 @@ def test_database_operations(utils, session_id):
             tax_old_regime=25000.0,
             tax_new_regime=30000.0,
             total_deductions=50000.0,
-            net_tax=25000.0
+            net_tax=25000.0,
+            employee_name="Test Employee"
         )
         assert calc_id > 0
         print(f"✓ Tax calculation saved with ID: {calc_id}")

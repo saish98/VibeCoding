@@ -80,7 +80,7 @@ def test_database_operations():
             print(f"✓ Document saved with ID: {doc_id}")
             input_id = utils.save_user_input(session_id, "salary", "basic_salary", "500000")
             print(f"✓ User input saved with ID: {input_id}")
-            calc_id = utils.save_tax_calculation(session_id, 500000.0, 50000.0, 45000.0, 100000.0, 40000.0)
+            calc_id = utils.save_tax_calculation(session_id, 500000.0, 50000.0, 45000.0, 100000.0, 40000.0, "Test Employee")
             print(f"✓ Tax calculation saved with ID: {calc_id}")
             conv_id = utils.save_ai_conversation(session_id, "What is my tax liability?", "Based on your income...")
             print(f"✓ AI conversation saved with ID: {conv_id}")
