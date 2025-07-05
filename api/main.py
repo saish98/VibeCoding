@@ -12,6 +12,7 @@ from api.database.migrations import DatabaseMigration
 from api.database.utils import DatabaseUtils
 from api.config.settings import settings
 from typing import Dict, Any
+from api.utils import extract_salary_slip_data
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -122,13 +123,44 @@ async def upload_pdf(
             file_type=file_type
         )
         
+        # --- PDF Extraction and Data Storage ---
+        extracted = extract_salary_slip_data(file_path)
+        # Store extracted fields in user_inputs
+        for field, value in extracted.get('employee', {}).items():
+            db_utils.save_user_input(session_id, 'employee', field, str(value))
+        for field, value in extracted.get('earnings', {}).items():
+            db_utils.save_user_input(session_id, 'earnings', field, str(value))
+        for field, value in extracted.get('deductions', {}).items():
+            db_utils.save_user_input(session_id, 'deductions', field, str(value))
+        # --- Tax Calculation ---
+        gross = extracted.get('gross_salary') or 0
+        deductions_total = sum(extracted.get('deductions', {}).values())
+        # Old Regime: gross - deductions
+        tax_old = max(gross - deductions_total, 0) * 0.2  # Example: 20% tax
+        # New Regime: flat 15% on gross
+        tax_new = gross * 0.15
+        net_tax = min(tax_old, tax_new)
+        calc_id = db_utils.save_tax_calculation(
+            session_id=session_id,
+            gross_income=gross,
+            tax_old_regime=tax_old,
+            tax_new_regime=tax_new,
+            total_deductions=deductions_total,
+            net_tax=net_tax
+        )
         return JSONResponse({
             "success": True,
             "session_id": session_id,
             "document_id": doc_id,
             "file_name": file.filename,
             "file_type": file_type,
-            "file_url": f"/uploads/{unique_filename}"
+            "file_url": f"/uploads/{unique_filename}",
+            "extracted": extracted,
+            "tax": {
+                "old_regime": tax_old,
+                "new_regime": tax_new,
+                "net_tax": net_tax
+            }
         })
         
     except Exception as e:
@@ -149,29 +181,37 @@ async def serve_file(filename: str):
 
 @app.get("/display/{session_id}")
 async def display_pdf(request: Request, session_id: str):
-    """Display uploaded PDF with input forms"""
-    
+    """Display uploaded PDF with input forms and extracted data"""
     # Validate session
     if not db_utils.validate_session(session_id):
         raise HTTPException(status_code=401, detail="Invalid or expired session")
-    
     # Get session data
     session_data = db_utils.get_session_data(session_id)
     documents = session_data.get('documents', [])
-    
+    user_inputs = session_data.get('user_inputs', [])
+    tax_calculations = session_data.get('tax_calculations', [])
     if not documents:
         raise HTTPException(status_code=404, detail="No documents found for session")
-    
     # Get the most recent document
     latest_doc = documents[0]
-    
     # Convert datetime objects to strings for JSON serialization
     document_data = convert_datetime_to_string(latest_doc)
-    
+    # Organize extracted data for display
+    extracted = {'employee': {}, 'earnings': {}, 'deductions': {}}
+    for row in user_inputs:
+        if row['input_type'] == 'employee':
+            extracted['employee'][row['field_name']] = row['field_value']
+        elif row['input_type'] == 'earnings':
+            extracted['earnings'][row['field_name']] = row['field_value']
+        elif row['input_type'] == 'deductions':
+            extracted['deductions'][row['field_name']] = row['field_value']
+    tax = tax_calculations[0] if tax_calculations else {}
     return templates.TemplateResponse("display.html", {
         "request": request,
         "session_id": session_id,
-        "document": document_data
+        "document": document_data,
+        "extracted": extracted,
+        "tax": tax
     })
 
 @app.delete("/delete-file/{document_id}")

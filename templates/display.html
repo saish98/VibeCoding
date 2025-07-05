@@ -65,21 +65,54 @@
                 <div class="card shadow">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-edit me-2"></i>
-                            Manual Data Entry
+                            <i class="fas fa-table me-2"></i>
+                            Extracted Data & Tax Results
                         </h5>
-                        <small class="text-muted">Enter details from your {{ document.file_type.replace('_', ' ').title() }}</small>
+                        <small class="text-muted">Automatically extracted from your {{ document.file_type.replace('_', ' ').title() }}</small>
                     </div>
                     <div class="card-body">
-                        <div id="dataInputForm">
-                            <!-- Form will be dynamically generated based on document type -->
-                            <div class="text-center">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading form...</span>
-                                </div>
-                                <p class="mt-2">Loading input form...</p>
-                            </div>
-                        </div>
+                        <h6>Employee Details</h6>
+                        <ul class="list-group mb-3">
+                            {% for key, value in extracted.employee.items() %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ key.replace('_', ' ').title() }}
+                                <span>{{ value }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <h6>Earnings</h6>
+                        <ul class="list-group mb-3">
+                            {% for key, value in extracted.earnings.items() %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ key.replace('_', ' ').title() }}
+                                <span>{{ value }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <h6>Deductions</h6>
+                        <ul class="list-group mb-3">
+                            {% for key, value in extracted.deductions.items() %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ key.replace('_', ' ').title() }}
+                                <span>{{ value }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <h6>Tax Calculation</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Old Regime Tax
+                                <span>{{ tax.tax_old_regime or 'N/A' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                New Regime Tax
+                                <span>{{ tax.tax_new_regime or 'N/A' }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Net Tax (Best Option)
+                                <span>{{ tax.net_tax or 'N/A' }}</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
